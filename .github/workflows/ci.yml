@@ -1,0 +1,93 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Build the practice database
+        run: python setup.py
+
+      - name: Verify schema and seed data
+        run: |
+          python - <<'PY'
+          import sqlite3
+          expected = {
+              "departments": 5,
+              "employees": 15,
+              "customers": 8,
+              "products": 8,
+              "orders": 15,
+          }
+          con = sqlite3.connect("practice.db")
+          found = {
+              row[0]
+              for row in con.execute(
+                  "SELECT name FROM sqlite_master WHERE type='table'"
+              )
+          }
+          missing = set(expected) - found
+          assert not missing, f"missing tables: {sorted(missing)}"
+          for table, count in expected.items():
+              actual = con.execute(f"SELECT count(*) FROM {table}").fetchone()[0]
+              assert actual == count, f"{table}: expected {count} rows, got {actual}"
+          print("schema and seed data OK")
+          PY
+
+      - name: Check every exercise has a matching solution
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          exercises = {p.name for p in Path("exercises").glob("*.sql")}
+          solutions = {p.name for p in Path("solutions").glob("*.sql")}
+          assert exercises, "no exercises found"
+          orphans = exercises ^ solutions
+          assert not orphans, f"exercise/solution mismatch: {sorted(orphans)}"
+          print(f"{len(exercises)} exercises paired with solutions")
+          PY
+
+      - name: Run every solution query against the database
+        run: |
+          python - <<'PY'
+          import re
+          import sqlite3
+          from pathlib import Path
+
+          con = sqlite3.connect("practice.db")
+          total = 0
+          for path in sorted(Path("solutions").glob("*.sql")):
+              body = re.sub(r"--[^\n]*", "", path.read_text())
+              for statement in body.split(";"):
+                  if not statement.strip():
+                      continue
+                  try:
+                      con.execute(statement)
+                  except sqlite3.Error as exc:
+                      raise SystemExit(f"{path.name}: {exc}\n{statement.strip()[:200]}")
+                  total += 1
+          print(f"{total} solution statements executed cleanly")
+          PY
+
+      - name: Byte-compile the runner
+        run: python -m compileall -q run.py setup.py
