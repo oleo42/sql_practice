@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Generated database — rebuild with `python setup.py`
+practice.db
+
+# Local learner state
+progress.json
+
+# Editor / agent local config
+.omp/
+
+# Stray Windows-path artifacts
+D:\\*
+memory:/

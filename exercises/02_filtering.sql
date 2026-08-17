@@ -1,0 +1,76 @@
+-- =============================================================================
+-- Lesson 2: Advanced Filtering — IN, BETWEEN, LIKE, IS NULL, AND/OR
+-- =============================================================================
+--
+-- So far you've learned basic WHERE conditions with =, >, <, <>, etc.
+-- Real-world queries need richer patterns:
+--
+--   IN (...)        – match any value in a list (shorthand for multiple ORs)
+--   BETWEEN X AND Y – inclusive range check (X <= col <= Y)
+--   LIKE '...'      – pattern matching: % matches any sequence, _ matches
+--                     exactly one character
+--   IS NULL         – test for NULL (use IS NULL, never = NULL)
+--   AND / OR        – combine multiple conditions; AND binds tighter than OR,
+--                     so use parentheses to be explicit
+--
+-- -----------------------------------------------------------------------------
+
+-- =============================================================================
+-- Task 1:  Find all employees in Engineering OR Finance departments
+-- =============================================================================
+--
+-- Write a query that returns the name, role, salary, and department_id of
+-- every employee whose department_id is 1 (Engineering) or 5 (Finance).
+--
+-- HINT: Use the IN operator with a list of department IDs.
+-- HINT: SELECT name, role, salary, department_id FROM employees WHERE …;
+
+-- =============================================================================
+-- Task 2:  Find all products that are either Widgets or Gadgets
+-- =============================================================================
+--
+-- Write a query that returns the id, name, category, and price of every
+-- product whose category is 'Widgets' or 'Gadgets'.
+--
+-- HINT: Use IN with a list of string literals — SQL string comparison is
+-- case-sensitive by default in most engines.
+-- HINT: SELECT id, name, category, price FROM products WHERE …;
+
+-- =============================================================================
+-- Task 3:  Find customers whose name contains 'tech' or 'data'
+--          (case-insensitive)
+-- =============================================================================
+--
+-- Write a query that returns the id, name, and email of every customer whose
+-- name contains either the word 'tech' OR 'data' anywhere (e.g. 'TechCorp',
+-- 'DataFlow Inc').
+--
+-- HINT: Use LIKE with % wildcards, combined with OR. SQLite's LIKE is
+-- case-insensitive for ASCII by default; in other engines you may need
+-- LOWER() — but here a plain LIKE works fine.
+-- HINT: WHERE name LIKE '%tech%' OR name LIKE '%data%'
+
+-- =============================================================================
+-- Task 4:  Find orders that are NOT yet delivered
+-- =============================================================================
+--
+-- Write a query that returns the id, customer_id, product_id, status, and
+-- order_date of every order whose status is 'pending' OR 'shipped' —
+-- i.e. nothing that has been 'delivered' yet.
+--
+-- HINT: You can write this with an IN list of the two "open" statuses,
+-- or with WHERE status != 'delivered'. Both work — pick whichever reads
+-- most clearly for your query.
+-- HINT: SELECT id, customer_id, product_id, status, order_date FROM orders …;
+
+-- =============================================================================
+-- Task 5:  Find employees hired in 2020 with salary > $60,000
+-- =============================================================================
+--
+-- Write a query that returns the name, role, salary, and hire_date of every
+-- employee who was hired in the year 2020 AND earns more than 60,000.
+--
+-- HINT: Use BETWEEN with date strings ('2020-01-01' AND '2020-12-31'). Since
+-- hire_date is stored in ISO-8601 format, a string range works correctly.
+-- Combine the date condition AND the salary condition.
+-- HINT: WHERE hire_date BETWEEN '2020-01-01' AND '2020-12-31' AND salary > 60000

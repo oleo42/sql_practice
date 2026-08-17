@@ -1,0 +1,113 @@
+-- =============================================================================
+-- LESSON 8: Common Table Expressions (CTEs) and Recursive CTEs
+-- =============================================================================
+-- A Common Table Expression (CTE) is a temporary named result set that you
+-- can reference within a single SELECT, INSERT, UPDATE, or DELETE statement.
+-- CTEs make complex queries more readable and reusable within the same query.
+--
+-- Basic syntax:
+--
+--   WITH cte_name AS (
+--       SELECT ... FROM ...
+--   )
+--   SELECT * FROM cte_name;
+--
+-- You can define multiple CTEs in one WITH clause, separated by commas.
+--
+-- A RECURSIVE CTE references itself to walk hierarchical or tree-structured
+-- data. It has two parts joined by UNION ALL:
+--
+--   1. Anchor member: the starting row(s) — e.g. the top of a tree.
+--   2. Recursive member: joins the CTE back to the source table to find
+--      the next level of children.
+--
+-- Syntax:
+--
+--   WITH RECURSIVE cte_name AS (
+--       SELECT ... FROM ... WHERE ...    -- anchor
+--       UNION ALL
+--       SELECT ... FROM ... JOIN cte_name ON ...  -- recursive step
+--   )
+--   SELECT * FROM cte_name;
+--
+-- Every recursive step must eventually produce zero new rows, or the
+-- query runs forever. SQLite enforces a recursion depth limit (default 1000).
+--
+-- ── Quick reference ─────────────────────────────────────────────────────────
+--     WITH name AS (query)       define a CTE
+--     WITH RECURSIVE name AS     define a recursive CTE
+--     UNION ALL                  combine anchor + recursive member
+--     strftime('%Y-%m', col)     extract year-month from a date string
+-- =============================================================================
+
+
+-- =============================================================================
+-- Task 1: Simple CTE — High earners
+-- =============================================================================
+--
+-- Write a CTE named "high_earners" that selects the name, salary, and role of
+-- every employee whose salary is greater than $90,000. Then write a SELECT that
+-- queries the CTE and sorts the results by salary in descending order.
+--
+-- HINT: Start with WITH high_earners AS ( SELECT ... FROM employees WHERE ... ).
+--       The final SELECT * FROM high_earners ORDER BY ... goes after the closing
+--       parenthesis — no semicolon before it, only one semicolon at the very end.
+
+
+-- =============================================================================
+-- Task 2: CTE with aggregation — Best-paid department
+-- =============================================================================
+--
+-- Write a CTE named "dept_avg" that joins departments and employees, groups by
+-- department name, and computes the average salary per department (call it
+-- avg_salary). Then SELECT the department name and average salary from the CTE,
+-- keeping only the single department with the highest average salary.
+--
+-- HINT: Round the average with ROUND(avg_salary, 0). Use ORDER BY ... DESC
+--       LIMIT 1 to pick the top department.
+
+
+-- =============================================================================
+-- Task 3: Recursive CTE — Employee org chart
+-- =============================================================================
+--
+-- The employees table has a manager_id column pointing to each employee's
+-- manager. The top-level managers have manager_id IS NULL (the CTO, id=1, is
+-- one of them).
+--
+-- Write a recursive CTE named "org_tree" that builds the full organization
+-- chart. Each row should show: employee id, name, manager_id, and a "level"
+-- column (0 for the top-level managers, 1 for their direct reports, 2 for
+-- reports-of-reports, etc.).
+--
+-- Anchor: select employees WHERE manager_id IS NULL and set their level to 0.
+-- Recursive step: join employees to org_tree on e.manager_id = ot.id and
+--                 set level = ot.level + 1.
+--
+-- Finally, SELECT level, name, id from the CTE, ordered by level then name.
+--
+-- HINT: Use WITH RECURSIVE org_tree AS ( ... ). The anchor is a plain SELECT
+--       from employees. The recursive member JOINs the CTE itself.
+--       Remember UNION ALL between the two parts.
+
+
+-- =============================================================================
+-- Task 4: CTE with date grouping — Monthly revenue
+-- =============================================================================
+--
+-- Write a CTE named "monthly_revenue" that computes total revenue per month
+-- from the orders table. Revenue for each order is quantity * unit_price.
+-- Group by the year-month extracted from order_date using strftime('%Y-%m', ...).
+--
+-- Then SELECT all columns from the CTE, sorted by revenue from highest to
+-- lowest, to find the best month.
+--
+-- HINT: strftime('%Y-%m', order_date) gives you a '2023-01' style string.
+--       Use SUM(quantity * unit_price) AS revenue in the CTE, then GROUP BY
+--       the month expression. The final query: SELECT * FROM monthly_revenue
+--       ORDER BY revenue DESC;
+
+
+-- =============================================================================
+-- END OF LESSON 8
+-- =============================================================================
